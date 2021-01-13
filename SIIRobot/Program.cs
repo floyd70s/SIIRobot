@@ -61,7 +61,73 @@ namespace SIIRobot
             int iCountJur = 0;                                                          // count register for JUR_ADMIN
             int iCountNoNewsJur = 0;                                                    // unsaved record count for JUR_ADMIN
             Ocr miOCR = new Ocr();                                                      // new instance of OCR Class
+            SII miSII = new SII();
+            string slinkID = "";
+            string sTitle = "";
+            int iPosTemp = 0;
+            //-----------------------------------------------------------------------------------------------------------------------
+            // get info from website SUSESO
+            //-----------------------------------------------------------------------------------------------------------------------
+            string URL = "https://www.sii.cl//normativa_legislacion/jurisprudencia_administrativa/ley_impuesto_ventas/2018/ley_impuesto_ventas_jadm2018.htm";
+            
+            //-----------------------------------------------------------------------------------------------------------------------
+            // we get all the data
+            // we create a class that maps the structure of the json obtained from the suseso website --> suseso.cs
+            //-----------------------------------------------------------------------------------------------------------------------
+            string siteBase = SII.extractWeb(URL);
+            bool bElement = true;
+            do
+            {
+                //Link
+                (slinkID,iPosTemp, bElement) =SII.sExtractTag(iPosTemp, siteBase, "<a href='", ".htm'");
+                string slink = "https://www.sii.cl//normativa_legislacion/jurisprudencia_administrativa/ley_impuesto_ventas/2018/" + slinkID+".htm";
+                
+                //Text
+                string sTextWeb = SII.extractWeb(slink);
+                sTextWeb = SII.StripHTML(sTextWeb);
 
+                //Title
+                (sTitle, iPosTemp, bElement) = SII.sExtractTag(iPosTemp, siteBase, "rel='modal'>", "</a>");
+
+                //Ord
+                string sOrd = "";
+                int iTemp = 0;
+                bool bTemp = false;
+                (sOrd, iTemp, bTemp) = SII.sExtractTag(0, sTitle, "(Ord.",")");
+
+
+            } while (bElement);
+
+            #region COMMENTS
+            Console.WriteLine("-----------------------------------------------------------------");
+            Console.WriteLine("-- PASO 1                                                        ");
+            Console.WriteLine("-- FIN DE LA OBTENCION DE DATOS                                  ");
+            Console.WriteLine("-- A LAS " + System.DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
+            Console.WriteLine("-- TOTAL DE REGISTROS REVISADOS :" + iMainCount);
+            Console.WriteLine("-- TOTAL DE REGISTROS INGRESADOS PARA VALIDAR:" + iGeneralCount);
+            Console.WriteLine("-- TOTAL DE REGISTROS NO INGRESADOS:" + iNotSaved);
+            Console.WriteLine("-- PAGINAS RECORRIDAS :" + iCountCycle);
+            Console.WriteLine("-----------------------------------------------------------------");
+            Console.WriteLine("-----------------------------------------------------------------");
+            Console.WriteLine("-- PASO 2                                                        ");
+            Console.WriteLine("-- SE CRUZAN LOS DATOS ENTRE LA BD LOCAL Y CENTRAL               ");
+            Console.WriteLine("-- SE GUARDAN LOS ARCHIVOS PDF                                   ");
+            Console.WriteLine("-- SE GUARDA EN TXT EL CONTENIDO                                 ");
+           // Console.WriteLine("-- TOTAL DE REGISTROS REVISADOS :" + miDataTableDirTrab.Rows.Count);
+            Console.WriteLine("-- TOTAL DE REGISTROS INGRESADOS:" + iCountJur);
+            Console.WriteLine("-- TOTAL DE REGISTROS NO INGRESADOS:" + iCountNoNewsJur);
+            Console.WriteLine("-----------------------------------------------------------------");
+
+            Email miEmail = new Email();
+            miEmail.sendEmail(iMainCount, 0, iCountJur);
+            Console.WriteLine("-- FIN DE LA EJECUCION " + DateTime.Now + "----");
+
+
+            #endregion
+            if (sDebug == "on")
+            {
+                Console.ReadLine();
+            }
         }
     }
 }
