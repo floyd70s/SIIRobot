@@ -64,37 +64,56 @@ namespace SIIRobot
             SII miSII = new SII();
             string slinkID = "";
             string sTitle = "";
+            string sAbstract = "";
             int iPosTemp = 0;
+
             //-----------------------------------------------------------------------------------------------------------------------
             // get info from website SUSESO
             //-----------------------------------------------------------------------------------------------------------------------
             string URL = "https://www.sii.cl//normativa_legislacion/jurisprudencia_administrativa/ley_impuesto_ventas/2018/ley_impuesto_ventas_jadm2018.htm";
-            
+
             //-----------------------------------------------------------------------------------------------------------------------
             // we get all the data
             // we create a class that maps the structure of the json obtained from the suseso website --> suseso.cs
             //-----------------------------------------------------------------------------------------------------------------------
             string siteBase = SII.extractWeb(URL);
             bool bElement = true;
+            (siteBase, iPosTemp, bElement) = SII.sExtractTag(iPosTemp, siteBase, "<tbody>", "</tbody>");
+          
             do
             {
+                iPosTemp = 0;
                 //Link
-                (slinkID,iPosTemp, bElement) =SII.sExtractTag(iPosTemp, siteBase, "<a href='", ".htm'");
-                string slink = "https://www.sii.cl//normativa_legislacion/jurisprudencia_administrativa/ley_impuesto_ventas/2018/" + slinkID+".htm";
-                
+                (slinkID, iPosTemp, bElement) = SII.sExtractTag(iPosTemp, siteBase, "<a href='", ".htm'");
+                string slink = "https://www.sii.cl//normativa_legislacion/jurisprudencia_administrativa/ley_impuesto_ventas/2018/" + slinkID + ".htm";
+
+                Console.WriteLine("-------------------------------------");
+                Console.WriteLine(iPosTemp + "-" + bElement + " link: " + slink);
+
                 //Text
                 string sTextWeb = SII.extractWeb(slink);
                 sTextWeb = SII.StripHTML(sTextWeb);
+                //Console.WriteLine(iPosTemp + "-" + bElement + " TextWeb: " + sTextWeb);
 
                 //Title
                 (sTitle, iPosTemp, bElement) = SII.sExtractTag(iPosTemp, siteBase, "rel='modal'>", "</a>");
+                sTitle = SII.StripHTML(sTitle);
+                Console.WriteLine(iPosTemp + "-" + bElement + " Title: " + sTitle);
+
+                //Abstract
+                (sAbstract, iPosTemp, bElement) = SII.sExtractTag(iPosTemp, siteBase, "<p style='margin-top:0px;margin-bottom:5px;text-align:justify;'>", "</p>");
+                sAbstract = SII.StripHTML(sAbstract).Trim();
+                Console.WriteLine(iPosTemp + "-" + bElement + " Abstract: " + sAbstract);
 
                 //Ord
                 string sOrd = "";
                 int iTemp = 0;
                 bool bTemp = false;
-                (sOrd, iTemp, bTemp) = SII.sExtractTag(0, sTitle, "(Ord.",")");
+                (sOrd, iTemp, bTemp) = SII.sExtractTag(0, sTitle, "(Ord.", ")");
+                sOrd = "Ord." + sOrd;
+                Console.WriteLine("Ord: " + sOrd);
 
+                siteBase = siteBase.Substring(iPosTemp);
 
             } while (bElement);
 
@@ -113,7 +132,7 @@ namespace SIIRobot
             Console.WriteLine("-- SE CRUZAN LOS DATOS ENTRE LA BD LOCAL Y CENTRAL               ");
             Console.WriteLine("-- SE GUARDAN LOS ARCHIVOS PDF                                   ");
             Console.WriteLine("-- SE GUARDA EN TXT EL CONTENIDO                                 ");
-           // Console.WriteLine("-- TOTAL DE REGISTROS REVISADOS :" + miDataTableDirTrab.Rows.Count);
+            // Console.WriteLine("-- TOTAL DE REGISTROS REVISADOS :" + miDataTableDirTrab.Rows.Count);
             Console.WriteLine("-- TOTAL DE REGISTROS INGRESADOS:" + iCountJur);
             Console.WriteLine("-- TOTAL DE REGISTROS NO INGRESADOS:" + iCountNoNewsJur);
             Console.WriteLine("-----------------------------------------------------------------");

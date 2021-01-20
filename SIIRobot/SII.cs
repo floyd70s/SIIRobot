@@ -57,9 +57,10 @@ namespace SIIRobot
         public static (string sSubText,int iPosition,bool bElement) sExtractTag(int iPosition, string sText, string sInitPattern,string sEndPattern2)
         {
             bool bContent = false;
-            int iInitialPosition = sText.IndexOf(sInitPattern) + sInitPattern.Length;
-            int iEndPosition = sText.IndexOf(sEndPattern2)- iInitialPosition;
-            string sSubText = sText.Substring(iInitialPosition, iEndPosition);
+            int iInitialPosition = sText.IndexOf(sInitPattern, iPosition) + sInitPattern.Length;
+            int iLength = sText.IndexOf(sEndPattern2, iInitialPosition) - iInitialPosition;
+            int iEndPosition = sText.IndexOf(sEndPattern2, iPosition) + sEndPattern2.Length;
+            string sSubText = sText.Substring(iInitialPosition, iLength);
             if (sSubText.Length > 0)
             {
                 bContent = true;
@@ -67,5 +68,20 @@ namespace SIIRobot
 
             return (sSubText,iEndPosition, bContent);
         }
+
+        public static string ReplaceHexadecimalSymbols(string txt)
+        {
+            string r = "[\x00-\x08\x0B\x0C\x0E-\x1F\x26\x91\x92]";
+            txt = Regex.Replace(txt, r, " ", RegexOptions.Compiled);
+            txt = txt.Replace("<", "&lt;");
+            txt = txt.Replace(">", "&gt;");
+            txt = txt.Replace("\n\n", "*SALTO*");
+            txt = txt.Replace("\n", "");
+            txt = txt.Replace("*SALTO*", "\n\n");
+            txt = txt.Replace(@"&ndash;", "|");
+
+            return txt;
+        }
+
     }
 }
