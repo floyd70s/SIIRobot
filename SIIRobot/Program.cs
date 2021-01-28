@@ -52,7 +52,6 @@ namespace SIIRobot
                 TXTPath = ConfigurationManager.AppSettings["TXTPathMac"];               // Path MacOs to save PDF
             }
 
-            string jResult = "-";                                                       // string for save JSON 
             string sResult = "";                                                        // string for print messages  
             int iCountCycle = 0;                                                        // records saved in the current cycle
             int iGeneralCount = 0;                                                      // number of records saved
@@ -66,7 +65,7 @@ namespace SIIRobot
             string sTitle = "";
             string sAbstract = "";
             int iPosTemp = 0;
-
+            DateTime dSentenceDate;
             //-----------------------------------------------------------------------------------------------------------------------
             // get info from website SUSESO
             //-----------------------------------------------------------------------------------------------------------------------
@@ -77,44 +76,80 @@ namespace SIIRobot
             // we create a class that maps the structure of the json obtained from the suseso website --> suseso.cs
             //-----------------------------------------------------------------------------------------------------------------------
             string siteBase = SII.extractWeb(URL);
-            bool bElement = true;
+            bool bElement = false;
             (siteBase, iPosTemp, bElement) = SII.sExtractTag(iPosTemp, siteBase, "<tbody>", "</tbody>");
-          
             do
             {
                 iPosTemp = 0;
                 //Link
                 (slinkID, iPosTemp, bElement) = SII.sExtractTag(iPosTemp, siteBase, "<a href='", ".htm'");
-                string slink = "https://www.sii.cl//normativa_legislacion/jurisprudencia_administrativa/ley_impuesto_ventas/2018/" + slinkID + ".htm";
 
-                Console.WriteLine("-------------------------------------");
-                Console.WriteLine(iPosTemp + "-" + bElement + " link: " + slink);
+                if (slinkID.Length > 0)
+                {
+                    string sAid = slinkID;
+                    string slink = "https://www.sii.cl//normativa_legislacion/jurisprudencia_administrativa/ley_impuesto_ventas/2018/" + slinkID + ".htm";
 
-                //Text
-                string sTextWeb = SII.extractWeb(slink);
-                sTextWeb = SII.StripHTML(sTextWeb);
-                //Console.WriteLine(iPosTemp + "-" + bElement + " TextWeb: " + sTextWeb);
+                    //Text
+                    string sTextWeb = SII.extractWeb(slink);
+                    sTextWeb = SII.StripHTML(sTextWeb);
 
-                //Title
-                (sTitle, iPosTemp, bElement) = SII.sExtractTag(iPosTemp, siteBase, "rel='modal'>", "</a>");
-                sTitle = SII.StripHTML(sTitle);
-                Console.WriteLine(iPosTemp + "-" + bElement + " Title: " + sTitle);
+                    //Title
+                    (sTitle, iPosTemp, bElement) = SII.sExtractTag(iPosTemp, siteBase, "rel='modal'>", "</a>");
+                    sTitle = SII.StripHTML(sTitle);
 
-                //Abstract
-                (sAbstract, iPosTemp, bElement) = SII.sExtractTag(iPosTemp, siteBase, "<p style='margin-top:0px;margin-bottom:5px;text-align:justify;'>", "</p>");
-                sAbstract = SII.StripHTML(sAbstract).Trim();
-                Console.WriteLine(iPosTemp + "-" + bElement + " Abstract: " + sAbstract);
+                    //Abstract
+                    (sAbstract, iPosTemp, bElement) = SII.sExtractTag(iPosTemp, siteBase, "<p style='margin-top:0px;margin-bottom:5px;text-align:justify;'>", "</p>");
+                    sAbstract = SII.StripHTML(sAbstract).Trim();
 
-                //Ord
-                string sOrd = "";
-                int iTemp = 0;
-                bool bTemp = false;
-                (sOrd, iTemp, bTemp) = SII.sExtractTag(0, sTitle, "(Ord.", ")");
-                sOrd = "Ord." + sOrd;
-                Console.WriteLine("Ord: " + sOrd);
+                    //Ord
+                    string sOrd = "";
+                    string sDate = "";
+                    int iTemp = 0;
+                    bool bTemp = false;
 
-                siteBase = siteBase.Substring(iPosTemp);
+                    (sOrd, iTemp, bTemp) = SII.sExtractTag(0, sTitle, "(Ord.", ")");
 
+                    sDate = sOrd.Substring(sOrd.LastIndexOf("de ") + 3);
+                    sOrd = sOrd.Substring(0, sOrd.LastIndexOf(","));
+                    //sDate
+                    dSentenceDate = Convert.ToDateTime(sDate);
+
+                    SII mySII = new SII();
+                    mySII.sAid = sAid;
+                    mySII.sTitle = sTitle;
+                    mySII.sSentenceText = sTextWeb;
+                    mySII.sAbstrac = sAbstract;
+                   
+                    mySII.sRol = sOrd;
+                    mySII.dtSentenceDate = dSentenceDate;
+                    mySII.sLink = slink;
+
+                    //-----------------------------------------------------------------------------------------------------------------------
+                    // get records from SQLite database SII 
+                    //-----------------------------------------------------------------------------------------------------------------------
+                    bool bExistAID = mySII.validateAID();
+
+                    if (bExistAID)
+                    {
+                        sResult = "El registro  \"{0}\" ya fue ingresado anteriormente." + mySII.sAid;
+                    }
+                    else
+                    {
+                        sResult = mySII.addElement();
+                        if (sResult == "ok")
+                        {
+                            iGeneralCount++;
+                            iCountCycle++;
+                        }
+                        else
+                        {
+                            iNotSaved++;
+                        }
+                    }
+                    iMainCount++;
+                    siteBase = siteBase.Substring(iPosTemp);
+                    Console.WriteLine("Registro {0} revisado", mySII.sAid);
+                }
             } while (bElement);
 
             #region COMMENTS
@@ -125,14 +160,12 @@ namespace SIIRobot
             Console.WriteLine("-- TOTAL DE REGISTROS REVISADOS :" + iMainCount);
             Console.WriteLine("-- TOTAL DE REGISTROS INGRESADOS PARA VALIDAR:" + iGeneralCount);
             Console.WriteLine("-- TOTAL DE REGISTROS NO INGRESADOS:" + iNotSaved);
-            Console.WriteLine("-- PAGINAS RECORRIDAS :" + iCountCycle);
             Console.WriteLine("-----------------------------------------------------------------");
             Console.WriteLine("-----------------------------------------------------------------");
             Console.WriteLine("-- PASO 2                                                        ");
             Console.WriteLine("-- SE CRUZAN LOS DATOS ENTRE LA BD LOCAL Y CENTRAL               ");
             Console.WriteLine("-- SE GUARDAN LOS ARCHIVOS PDF                                   ");
             Console.WriteLine("-- SE GUARDA EN TXT EL CONTENIDO                                 ");
-            // Console.WriteLine("-- TOTAL DE REGISTROS REVISADOS :" + miDataTableDirTrab.Rows.Count);
             Console.WriteLine("-- TOTAL DE REGISTROS INGRESADOS:" + iCountJur);
             Console.WriteLine("-- TOTAL DE REGISTROS NO INGRESADOS:" + iCountNoNewsJur);
             Console.WriteLine("-----------------------------------------------------------------");
