@@ -73,4 +73,5 @@ C:\Users\Claudio Perez\source\repos\SIIRobot\SIIRobot\bin\Debug\ja\GrapeCity.Doc
 C:\Users\Claudio Perez\source\repos\SIIRobot\SIIRobot\obj\Debug\SIIRobot.csproj.CopyComplete
 C:\Users\Claudio Perez\source\repos\SIIRobot\SIIRobot\obj\Debug\SIIRobot.exe
 C:\Users\Claudio Perez\source\repos\SIIRobot\SIIRobot\obj\Debug\SIIRobot.pdb
-C:\Users\Claudio Perez\source\repos\SIIRobot\SIIRobot\obj\Debug\SIIRobot.exe.config
+C:\Users\Claudio Perez\source\repos\SIIRobot\SIIRobot\bin\Debug\System.Data.SqlClient.dll
+C:\Users\Claudio Perez\source\repos\SIIRobot\SIIRobot\bin\Debug\System.Data.SqlClient.xml

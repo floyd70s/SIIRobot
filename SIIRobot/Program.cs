@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Data;
 
 [assembly: log4net.Config.XmlConfigurator(Watch = true)]
 namespace SIIRobot
@@ -19,6 +20,8 @@ namespace SIIRobot
             string sDebug = ConfigurationManager.AppSettings["Debug"];                            // Debug mode: on/off
             string sLanguage = ConfigurationManager.AppSettings["Language"];                      // Language: eng/spa
             string sCleanFolders = ConfigurationManager.AppSettings["CleanFolders"];              // flag for clean folders: on/off
+            JurAdmin miJurAdmin = new JurAdmin();                                                 // new instance of JurAdmin Class
+            SII mySII = new SII();                                                                // new instance of SII Class
 
             int range = Convert.ToInt32(ConfigurationManager.AppSettings["range"]);               // 365 days
             string iniDate = DateTime.Now.AddDays(-range).ToString("yyyy/MM/dd");                 // initial search date
@@ -114,7 +117,6 @@ namespace SIIRobot
                     //sDate
                     dSentenceDate = Convert.ToDateTime(sDate);
 
-                    SII mySII = new SII();
                     mySII.sAid = sAid;
                     mySII.sTitle = sTitle;
                     mySII.sSentenceText = sTextWeb;
@@ -123,6 +125,7 @@ namespace SIIRobot
                     mySII.sRol = sOrd;
                     mySII.dtSentenceDate = dSentenceDate;
                     mySII.sLink = slink;
+                    mySII.sDocumentType= ConfigurationManager.AppSettings["Ordinarios"];
 
                     //-----------------------------------------------------------------------------------------------------------------------
                     // get records from SQLite database SII 
@@ -151,6 +154,39 @@ namespace SIIRobot
                     Console.WriteLine("Registro {0} revisado", mySII.sAid);
                 }
             } while (bElement);
+
+            DataTable mySIIDataTable = mySII.getAll();                //get pending records from DIRTRAB - Status=0
+
+            foreach (DataRow dtRow in mySIIDataTable.Rows)
+            {
+                string sAID = dtRow[0].ToString();
+                mySII.sAid = sAID;
+                mySII.sRol = dtRow[7].ToString();
+                bool bExistAIDJur = mySII.validateRol();
+
+                if (bExistAIDJur)
+                {
+                    Console.WriteLine("EL REGISTRO {0} YA EXISTE EN JUR_ADMINISTRATIVA", dtRow[0].ToString());
+                    //mySIIDataTable.update(1);
+                    iCountNoNewsJur++;
+                }
+                else
+                {
+                    Console.WriteLine("NO  EXISTE EL REGISTRO {0} EN JUR_ADMINISTRATIVA", dtRow[0].ToString());
+                    miJurAdmin.titulo = dtRow[1].ToString();
+                    miJurAdmin.sumario = dtRow[2].ToString();
+                    miJurAdmin.textoSentencia= dtRow[3].ToString();
+                    miJurAdmin.fechaRegistro = Convert.ToDateTime(dtRow[4]);
+                    miJurAdmin.fechaSentencia = Convert.ToDateTime(dtRow[6]);
+                    miJurAdmin.rol = dtRow[7].ToString();
+                    miJurAdmin.linkOrigen = dtRow[8].ToString();
+                    miJurAdmin.tipoDocumento = Convert.ToInt32(dtRow[9].ToString());
+
+                    miJurAdmin.addElement();
+                    mySII.update(1);
+                    iCountJur++;
+                }
+            }
 
             #region COMMENTS
             Console.WriteLine("-----------------------------------------------------------------");

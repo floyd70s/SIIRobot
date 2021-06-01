@@ -126,7 +126,7 @@ namespace SIIRobot
             DataRow row;
 
             column = new DataColumn();
-            column.DataType = System.Type.GetType("System.Int32");
+            column.DataType = System.Type.GetType("System.String");
             column.ColumnName = "aid";
             dt.Columns.Add(column);
 
@@ -140,12 +140,10 @@ namespace SIIRobot
             column.ColumnName = "abstract";
             dt.Columns.Add(column);
 
-
             column = new DataColumn();
             column.DataType = System.Type.GetType("System.String");
-            column.ColumnName = "name";
+            column.ColumnName = "sentenceText";
             dt.Columns.Add(column);
-
 
             column = new DataColumn();
             column.DataType = System.Type.GetType("System.String");
@@ -159,20 +157,23 @@ namespace SIIRobot
 
             column = new DataColumn();
             column.DataType = System.Type.GetType("System.String");
-            column.ColumnName = "orden";
+            column.ColumnName = "sentenceDate";
             dt.Columns.Add(column);
-
 
             column = new DataColumn();
             column.DataType = System.Type.GetType("System.String");
-            column.ColumnName = "sentenceDate";
+            column.ColumnName = "rol";
+            dt.Columns.Add(column);
+
+            column = new DataColumn();
+            column.DataType = System.Type.GetType("System.String");
+            column.ColumnName = "link";
             dt.Columns.Add(column);
 
             column = new DataColumn();
             column.DataType = System.Type.GetType("System.String");
             column.ColumnName = "documentType";
             dt.Columns.Add(column);
-
 
             try
             {
@@ -184,15 +185,16 @@ namespace SIIRobot
                 {
                     row = dt.NewRow();
 
-                    row["aid"] = reader.GetInt32(0);
+                    row["aid"] = reader.GetString(0);
                     row["title"] = reader.GetString(1);
                     row["abstract"] = reader.GetString(2);
-                    row["name"] = reader.GetString(3);
+                    row["sentenceText"] = reader.GetString(3);
                     row["insertDate"] = reader.GetString(4);
                     row["status"] = reader.GetInt32(5);
-                    row["orden"] = reader.GetString(6);
-                    row["sentenceDate"] = reader.GetString(7);
-                    row["documentType"] = reader.GetString(8);
+                    row["sentenceDate"] = reader.GetString(6);
+                    row["rol"] = reader.GetString(7);
+                    row["link"] = reader.GetString(8);
+                    row["documentType"] = reader.GetString(9);
 
                     dt.Rows.Add(row);
                 }
@@ -221,7 +223,7 @@ namespace SIIRobot
             DataTable dt = new DataTable();
             try
             {
-                SqlConnection connection = new SqlConnection(connectionString);
+                SqlConnection connection = new SqlConnection(this.connectionString);
                 SqlCommand command;
 
                 connection.Open();

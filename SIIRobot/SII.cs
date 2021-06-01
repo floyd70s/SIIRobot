@@ -18,14 +18,17 @@ namespace SIIRobot
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private string conStringSQLite = ConfigurationManager.ConnectionStrings["conStringSQLite"].ConnectionString;
+        private string conStringSQL = ConfigurationManager.ConnectionStrings["conStringSQL"].ConnectionString;
         public string  sAid { get; set; }
         public string sTitle { get; set; }
-        public string sSentenceText { get; set; }
         public string sAbstrac { get; set; }
+        public string sSentenceText { get; set; }
+        public string dtInsertDate { get; set; }
+        public string sStatus { get; set; }
+        public DateTime dtSentenceDate { get; set; }
         public string sRol { get; set; }
         public string sLink { get; set; }
-        public DateTime dtSentenceDate { get; set; }
-       
+        public string sDocumentType { get; set; }
 
         private DataManager _myDataManager;
         private DataManager myDataManager
@@ -153,7 +156,7 @@ namespace SIIRobot
                 this.sSentenceText = ReplaceHexadecimalSymbols(this.sSentenceText);
 
                 this.myDataManager = new DataManager(this.conStringSQLite);
-                string SQL = "INSERT INTO  'SII' ('aid', 'title', 'abstract', 'sentenceText', 'insertDate', 'status', 'sentenceDate','rol','link') VALUES (" +
+                string SQL = "INSERT INTO  'SII' ('aid', 'title', 'abstract', 'sentenceText', 'insertDate', 'status', 'sentenceDate','rol','link','documentType') VALUES (" +
                             "'" + this.sAid + "'," +
                             "'" + this.sTitle + "'," +
                             "'" + this.sAbstrac + "'," +
@@ -162,7 +165,8 @@ namespace SIIRobot
                             "0," +
                             "'" + this.dtSentenceDate.ToString("yyyy/MM/dd") + "'," +
                             "'" + this.sRol + "'," +
-                            "'"+ this.sLink+ "');";
+                            "'"+ this.sLink+ "'," +
+                            "'16');";
                 
                 string sMsg = myDataManager.setData(SQL);
                 if (sMsg == "ok")
@@ -185,6 +189,72 @@ namespace SIIRobot
             }
         }
 
+        public DataTable getAll()
+        {
+            this.myDataManager = new DataManager(this.conStringSQLite);
+            string SQL = "SELECT AID, title, abstract,sentenceText,insertDate,status,sentenceDate,rol,link,documentType from SII where status=0";
+            DataTable miDataTable = myDataManager.getDataTemp(SQL);
+            return miDataTable;
+        }
+
+        public bool validateRol()
+        {
+            DataTable dtTemp;
+            myDataManager = new DataManager(this.conStringSQL);
+            myDataManager.connectionString = this.conStringSQL;
+            string sSQL = "SELECT TOP 1 ROL FROM JUR_ADMINISTRATIVA  WHERE ROL='" + this.sRol + "' AND TIPODOCUMENTO_ID=16;";
+            dtTemp = this.myDataManager.getDataSQL(sSQL);
+
+            if (dtTemp.Rows.Count > 0)
+            {
+                if (dtTemp.Rows[0][0].ToString() != "")
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// update DIRTRAB table
+        /// status:
+        ///     0 pending
+        ///     1 ok
+        ///     2 pending pdf
+        /// </summary>
+        /// <param name="iStatus"></param>
+        /// <returns></returns>
+        public string update(int iStatus)
+        {
+            try
+            {
+                this.myDataManager = new DataManager(this.conStringSQLite);
+                string SQL = "update SII set status=" + iStatus + "  where aid='" + this.sAid+"';";
+
+                string sMsg = myDataManager.setData(SQL);
+                if (sMsg == "ok")
+                {
+                    Console.WriteLine("El registro  \"{0}\" actualizado correctamente.", this.sAid);
+                    return "ok";
+                }
+                else
+                {
+                    return "error en la actualizacion.";
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[Fatal Error]\r\n" + ex.Message + "\r\n" + ex.StackTrace + "\r\n" + ex.InnerException + "\r\n" + ex.Source);
+                Console.WriteLine("........Fail");
+                log.Error("[Fatal Error]\r\n" + ex.Message + "\r\n" + ex.StackTrace + "\r\n" + ex.InnerException + "\r\n" + ex.Source);
+
+                return "error";
+            }
+        }
 
 
     }
